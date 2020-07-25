@@ -1,0 +1,21 @@
+{
+  "name": "codes-cli",
+  "version": "0.0.17",
+  "description": "cli",
+  "main": "index.ts",
+  "bin": {
+    "yj": "./packages/index.ts"
+  },
+  "repository": "https://github.com/CodeYHJ/cli.git",
+  "author": "CodeYHJ <colgateyhj@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^6.0.0",
+    "inquirer": "^7.3.3"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^7.3.0",
+    "@types/node": "^14.0.26",
+    "jest": "^26.1.0"
+  }
+}
