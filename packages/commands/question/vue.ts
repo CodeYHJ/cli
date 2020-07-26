@@ -1,5 +1,5 @@
 import inquirer = require("inquirer");
-import { create, cover } from "../action/index";
+import { create_webpack_vue, cover } from "../action/index";
 import { localDB } from "../col/db";
 
 export const vue = () =>
@@ -16,7 +16,7 @@ export const vue = () =>
     .then((res) => {
       const { action } = res;
       if (action === "create") {
-        create();
+        create_webpack_vue();
         console.log(localDB);
       }
       if (action === "cover") {

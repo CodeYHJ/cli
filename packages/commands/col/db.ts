@@ -1,24 +1,46 @@
-export let localDB: DB | null = null;
+export let localDB: DB;
 
-// type CreateProject = {
-//   name: string;
-// };
-type DBInstance = {
-  [key: string]: string | Object | Array<string | Object> | null;
-};
+export enum PlatFormType {
+  /**
+   * webpack
+   */
+  WEBPACK = 1,
+  /**
+   * vite
+   */
+  VITE = 2,
+}
+export enum LibeType {
+  /**
+   * vue
+   */
+  VUE = 1,
+  /**
+   * react
+   */
+  REACT = 2,
+}
+
+export interface DBInstance {
+  projectName: string;
+  rootPath: string;
+  platFormtype: PlatFormType;
+  libType: LibeType;
+}
 
 class DB {
   private db: DBInstance;
   constructor() {
-    this.db = {};
+    this.db = {} as DBInstance;
+    localDB = this;
   }
-  add(key: string, value: string) {
+  add<K extends keyof DBInstance, V extends DBInstance[K]>(key: K, value: V) {
     this.db[key] = value;
   }
-  get(key: string) {
+  get(key: keyof DBInstance) {
     return this.db[key];
   }
-  remove(key: string) {
+  remove(key: keyof DBInstance) {
     delete this.db[key];
   }
   commit() {
@@ -26,6 +48,6 @@ class DB {
   }
 }
 export const createDB = () => {
-  if (localDB != null) localDB = null;
   localDB = new DB();
+  return localDB;
 };

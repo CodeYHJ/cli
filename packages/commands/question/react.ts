@@ -1,5 +1,7 @@
 import inquirer = require("inquirer");
-import { create, cover } from "../action/index";
+// import { create_webpack_react, cover } from "../action/index";
+import { scan } from "../file/scan";
+import { localDB } from "../col/db";
 
 export const react = () =>
   inquirer
@@ -8,16 +10,28 @@ export const react = () =>
       message: "请选择action",
       name: "action",
       choices: [
-        { name: "新建项目", value: "create" },
-        { name: "覆盖旧项目", value: "cover" },
+        { name: "新建项目 - vite", value: "create_vite" },
+        { name: "新建项目 - webpack", value: "create_webpack" },
+        { name: "覆盖旧项目 - vite", value: "cover_vite" },
+        { name: "覆盖旧项目 - webpack", value: "cover_webpack" },
       ],
     })
     .then((res) => {
       const { action } = res;
-      if (action === "create") {
-        create();
+      if (action === "create_vite") {
+        localDB.add("platFormtype", 2);
+        scan();
       }
-      if (action === "cover") {
-        cover();
+      if (action === "create_webpack") {
+        localDB.add("platFormtype", 1);
+        localDB.add("libType", 2);
+
+        scan();
+      }
+      if (action === "cover_vite") {
+        // cover();
+      }
+      if (action === "cover_webpack") {
+        // cover();
       }
     });
