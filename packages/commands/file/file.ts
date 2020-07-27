@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import { PlatFormType, LibeType } from "../col/db";
 import { currentPath } from "../../utils/index";
-import JSONStream from "JSONStream";
 export enum FileType {
   /**
    * 存在
@@ -23,7 +22,8 @@ export enum FileType {
 }
 export type DependType = {
   isRoot: boolean;
-  path: string;
+  templatePath: string;
+  targetPath: string,
   isDir: boolean;
   platFormtype?: PlatFormType;
   libType?: LibeType;
@@ -88,34 +88,50 @@ export class FileFn {
     const tree = {
       isRoot: false,
       isDir: false,
-      path: rootPath,
+      templatePath: rootPath,
+      targetPath: rootPath,
       children: [],
     } as DependType;
     const files = fs.readdirSync(rootPath, {
       encoding: "utf-8",
       withFileTypes: true,
     });
+    /**
+     * 根
+     */
     if (projectName === "root") {
       tree.isRoot = true;
       tree.isDir = true;
-      tree.path = rootPath;
+      tree.targetPath = "{{projectPath}}"
+      tree.templatePath = rootPath
       tree.children = [];
       tree.platFormtype = platFormtype;
       tree.libType = libType;
+    } else {
+      const targetPath = rootPath.match(/(react|vue).*/i)
+      const templatePath = rootPath.match(/packages.*/i);
+      tree.targetPath = templatePath ? templatePath[0].replace(/^(react|vue)?/i, '{{projectPath}}') : ''
+      tree.templatePath = targetPath ? targetPath[0] : ''
     }
+    /**
+     * 子文件
+     */
     if (files.length) {
       files.forEach((file) => {
         const fileTree = {} as DependType;
         const isDirectory = file.isDirectory();
         const name = file.name;
-        const filePath = path.resolve(rootPath, name);
-        fileTree.isDir = isDirectory;
-        fileTree.path = filePath;
+        const filePath = path.resolve(rootPath, name)
+        // 模板路径
+        const targetPath = filePath.match(/(react|vue).*/i)
+        fileTree.targetPath = targetPath ? targetPath[0].replace(/^(react|vue)?/i, '{{projectPath}}') : ''
+        // 源模板路径
+        const templatePath = filePath.match(/packages.*/i);
+        fileTree.templatePath = templatePath ? templatePath[0] : ''
         fileTree.children = [];
+
         if (isDirectory) {
           const subTree = this.generateDepend2JSON(filePath, name);
-          // console.log(tree, "33333", subTree);
-
           fileTree.children.push(subTree);
         }
         tree.children.push(fileTree);
@@ -146,17 +162,19 @@ export class FileFn {
       resolve(str);
     })
       .then((str) => {
-        const jsonStream = JSONStream.stringifyObject();
         const writeStream = fs.createWriteStream(targetPath);
-        jsonStream.pipe(writeStream);
-        jsonStream.write(str);
-        jsonStream.end();
+        writeStream.write(str);
+        writeStream.end();
       })
       .catch((err) => {
         console.log(err);
       });
   }
-
+  /**
+   * 创建模板JSON
+   * @param platFormtype 
+   * @param libType 
+   */
   static templetePath(platFormtype: PlatFormType, libType: LibeType) {
     const targetPath = (str: string) =>
       path.resolve(currentPath(), `packages/template/${str}Map.json`);
