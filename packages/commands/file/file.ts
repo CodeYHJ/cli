@@ -23,7 +23,7 @@ export enum FileType {
 export type DependType = {
   isRoot: boolean;
   templatePath: string;
-  targetPath: string,
+  targetPath: string;
   isDir: boolean;
   platFormtype?: PlatFormType;
   libType?: LibeType;
@@ -102,34 +102,46 @@ export class FileFn {
     if (projectName === "root") {
       tree.isRoot = true;
       tree.isDir = true;
-      tree.targetPath = "{{projectPath}}"
-      tree.templatePath = rootPath
+      tree.targetPath = "{{projectPath}}";
+      tree.templatePath = rootPath;
       tree.children = [];
       tree.platFormtype = platFormtype;
       tree.libType = libType;
     } else {
-      const targetPath = rootPath.match(/(react|vue).*/i)
+      const targetPath = rootPath.match(/(react|vue).*/i);
+      tree.targetPath = targetPath
+        ? targetPath[0].replace(/^(react|vue)?/i, "{{projectPath}}")
+        : "";
       const templatePath = rootPath.match(/packages.*/i);
-      tree.targetPath = templatePath ? templatePath[0].replace(/^(react|vue)?/i, '{{projectPath}}') : ''
-      tree.templatePath = targetPath ? targetPath[0] : ''
-      tree.isDir = files.length ? true : false
+      tree.templatePath = templatePath ? templatePath[0] : "";
+      tree.isDir = files.length ? true : false;
     }
+
     /**
      * 子文件
      */
     if (files.length) {
+      // console.log(files, "6666666", rootPath);
+
       files.forEach((file) => {
         const fileTree = {} as DependType;
         const isDirectory = file.isDirectory();
-        fileTree.isDir = isDirectory
+        fileTree.isDir = isDirectory;
+        fileTree.isRoot = false;
         const name = file.name;
-        const filePath = path.resolve(rootPath, name)
+        if (name === "pages") {
+          console.log(name);
+          console.log(rootPath);
+        }
+        const filePath = path.join(rootPath, name);
         // 模板路径
-        const targetPath = filePath.match(/(react|vue).*/i)
-        fileTree.targetPath = targetPath ? targetPath[0].replace(/^(react|vue)?/i, '{{projectPath}}') : ''
+        const targetPath = filePath.match(/(react|vue).*/i);
+        fileTree.targetPath = targetPath
+          ? targetPath[0].replace(/^(react|vue)?/i, "{{projectPath}}")
+          : "";
         // 源模板路径
         const templatePath = filePath.match(/packages.*/i);
-        fileTree.templatePath = templatePath ? templatePath[0] : ''
+        fileTree.templatePath = templatePath ? templatePath[0] : "";
         fileTree.children = [];
 
         if (isDirectory) {
@@ -174,8 +186,8 @@ export class FileFn {
   }
   /**
    * 创建模板JSON
-   * @param platFormtype 
-   * @param libType 
+   * @param platFormtype
+   * @param libType
    */
   static templetePath(platFormtype: PlatFormType, libType: LibeType) {
     const targetPath = (str: string) =>
@@ -196,49 +208,67 @@ export class FileFn {
   }
   /**
    * 读取文件返回Object
-   * @param targetPath 
+   * @param targetPath
    */
   // packages/template/webpack/react
   static read2Object(targetPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
-
-      fs.readFile(targetPath, { encoding: 'utf-8' }, (err, data) => {
+      fs.readFile(targetPath, { encoding: "utf-8" }, (err, data) => {
         if (err) {
-          reject(err)
+          reject(err);
         } else {
-          resolve(data)
+          resolve(data);
         }
-      })
-    })
+      });
+    });
   }
 
   /**
    * 把template复制到目标路径
-   * @param rootPath 
-   * @param templateJsonStr 
+   * @param rootPath
+   * @param templateJsonStr
    */
   static copy2targetPath(rootPath: string, templateJsonStr: string) {
-    const handleTemplatePath = (templatePath: string) => path.resolve(rootPath, "/", templatePath)
-    const copy = (json: DependType) => {
-      const children = json.children
+    const handleTemplatePath = (templatePath: string) =>
+      path.join(rootPath, "/", templatePath);
+
+    //创建文件夹
+    const mkdir = (dirPath: string) => {
+      return new Promise((resolve, reject) => {
+        fs.mkdir(dirPath, { recursive: true }, (err) => {
+          if (err) reject(err);
+          resolve();
+        });
+      });
+    };
+    // 复制文件
+    const copyFile = (sourcePath: string, targetPath: string) => {
+      return new Promise((resolve, reject) => {
+        fs.copyFile(sourcePath, targetPath, (err) => {
+          if (err) reject(err);
+          resolve();
+        });
+      });
+    };
+    const copy = async (json: DependType) => {
+      const children = json.children;
       if (json.isDir) {
         if (this.hasFileorDir(json.targetPath) === FileType.UNEXIST) {
-          console.log(json.targetPath, '22222')
-          fs.mkdirSync(json.targetPath)
+          await mkdir(json.targetPath);
         }
       } else {
-        fs.copyFileSync(handleTemplatePath(json.templatePath), json.targetPath)
-
+        await copyFile(handleTemplatePath(json.templatePath), json.targetPath);
       }
       if (children && children.length > 0) {
-        children.forEach(item => copy(item))
+        children.forEach((item) => copy(item));
       }
-
-    }
-    const db = localDB.commit()
-    const projectPath = JSON.stringify(path.resolve(db.rootPath, db.projectName)).replace(/\"/g, '')
-    const str = templateJsonStr.replace(/\{\{projectPath\}\}/g, projectPath)
+    };
+    const db = localDB.commit();
+    const projectPath = JSON.stringify(
+      path.resolve(db.rootPath, db.projectName)
+    ).replace(/\"/g, "");
+    const str = templateJsonStr.replace(/\{\{projectPath\}\}/g, projectPath);
     const json = JSON.parse(str) as DependType;
-    copy(json)
+    copy(json);
   }
 }
