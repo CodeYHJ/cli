@@ -1,6 +1,3 @@
-import { FileFn, FileType } from "../commands/file/file";
-import path from "path";
-import { PlatFormType, LibeType } from "../commands/col/db";
 
 type targetType = string | number | boolean | symbol | object | Array<any>
 
@@ -10,26 +7,7 @@ type targetType = string | number | boolean | symbol | object | Array<any>
 export const currentPath = () => process.cwd();
 
 
-/**
- * 生成模板
- */
-export const generate = () => {
-  const pathList = generateAllPath();
-  const complatePath = pathList.filter(
-    ({ path }) => FileFn.hasFileorDir(path) === FileType.EXIST
-  );
-  complatePath.forEach(({ path, platFormtype, libType }) => {
 
-    const dirDependObj = FileFn.generateDepend2JSON(
-      path,
-      undefined,
-      platFormtype,
-      libType
-    );
-    const clone = deepClone(dirDependObj)
-    FileFn.writeString(JSON.stringify(clone), platFormtype, libType);
-  });
-};
 
 /**
  * 深克隆 对象中存在引用，JSON.stringify无法转换
@@ -66,35 +44,4 @@ export const deepClone = (target: targetType, ref:WeakSet<Object> = new WeakSet(
 
   return newValue;
 }
-/**
- * 生成模板路径
- */
-export const generateAllPath = () => {
-  const viteReactPath = "packages/template/vite/react";
-  const viteVuePath = "packages/template/vite/vue";
-  const webpackReactPath = "packages/template/webpack/react";
-  const webpackVuePath = "packages/template/webpack/vue";
-  return [
-    {
-      platFormtype: PlatFormType.VITE,
-      libType: LibeType.REACT,
-      path: viteReactPath,
-    },
-    {
-      platFormtype: PlatFormType.VITE,
-      libType: LibeType.VUE,
-      path: viteVuePath,
-    },
-    {
-      platFormtype: PlatFormType.WEBPACK,
-      libType: LibeType.REACT,
-      path: webpackReactPath,
-    },
-    {
-      platFormtype: PlatFormType.WEBPACK,
-      libType: LibeType.VUE,
-      path: webpackVuePath,
-    },
-  ];
 
-};

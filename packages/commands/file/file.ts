@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { PlatFormType, LibeType } from "../col/db";
+import { PlatFormType, LibeType, localDB } from "../col/db";
 import { currentPath } from "../../utils/index";
 export enum FileType {
   /**
@@ -112,6 +112,7 @@ export class FileFn {
       const templatePath = rootPath.match(/packages.*/i);
       tree.targetPath = templatePath ? templatePath[0].replace(/^(react|vue)?/i, '{{projectPath}}') : ''
       tree.templatePath = targetPath ? targetPath[0] : ''
+      tree.isDir = files.length ? true : false
     }
     /**
      * 子文件
@@ -120,6 +121,7 @@ export class FileFn {
       files.forEach((file) => {
         const fileTree = {} as DependType;
         const isDirectory = file.isDirectory();
+        fileTree.isDir = isDirectory
         const name = file.name;
         const filePath = path.resolve(rootPath, name)
         // 模板路径
@@ -191,5 +193,52 @@ export class FileFn {
         return targetPath("webpack_vue");
       }
     }
+  }
+  /**
+   * 读取文件返回Object
+   * @param targetPath 
+   */
+  // packages/template/webpack/react
+  static read2Object(targetPath: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+
+      fs.readFile(targetPath, { encoding: 'utf-8' }, (err, data) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  }
+
+  /**
+   * 把template复制到目标路径
+   * @param rootPath 
+   * @param templateJsonStr 
+   */
+  static copy2targetPath(rootPath: string, templateJsonStr: string) {
+    const handleTemplatePath = (templatePath: string) => path.resolve(rootPath, "/", templatePath)
+    const copy = (json: DependType) => {
+      const children = json.children
+      if (json.isDir) {
+        if (this.hasFileorDir(json.targetPath) === FileType.UNEXIST) {
+          console.log(json.targetPath, '22222')
+          fs.mkdirSync(json.targetPath)
+        }
+      } else {
+        fs.copyFileSync(handleTemplatePath(json.templatePath), json.targetPath)
+
+      }
+      if (children && children.length > 0) {
+        children.forEach(item => copy(item))
+      }
+
+    }
+    const db = localDB.commit()
+    const projectPath = JSON.stringify(path.resolve(db.rootPath, db.projectName)).replace(/\"/g, '')
+    const str = templateJsonStr.replace(/\{\{projectPath\}\}/g, projectPath)
+    const json = JSON.parse(str) as DependType;
+    copy(json)
   }
 }

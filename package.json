@@ -12,14 +12,15 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "testPathIgnorePatterns": ["<rootDir>/packages/template"],
+    "testPathIgnorePatterns": [
+      "<rootDir>/packages/template"
+    ],
     "transform": {
       "^.+\\.ts?$": "ts-jest"
     }
   },
   "dependencies": {
     "commander": "^6.0.0",
-    "download-git-repo": "^3.0.2",
     "handlebars": "^4.7.6",
     "inquirer": "^7.3.3"
   },

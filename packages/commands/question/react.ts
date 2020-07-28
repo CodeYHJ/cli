@@ -1,5 +1,5 @@
-import inquirer = require("inquirer");
-// import { create_webpack_react, cover } from "../action/index";
+import inquirer  from "inquirer";
+import { create_webpack_react, cover } from "../action/index";
 import { scan } from "../file/scan";
 import { localDB } from "../col/db";
 
@@ -18,20 +18,20 @@ export const react = () =>
     })
     .then((res) => {
       const { action } = res;
+      localDB.add("libType", 2);
+
       if (action === "create_vite") {
         localDB.add("platFormtype", 2);
         scan();
       }
       if (action === "create_webpack") {
         localDB.add("platFormtype", 1);
-        localDB.add("libType", 2);
-
-        scan();
+        create_webpack_react()
       }
       if (action === "cover_vite") {
-        // cover();
+        cover();
       }
       if (action === "cover_webpack") {
-        // cover();
+        cover();
       }
     });

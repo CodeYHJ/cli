@@ -6,7 +6,7 @@ export const gitClone = (
   cb: (err?: Error, res?: any) => void
 ) => {
   const args = ["clone"];
-  args.push("--");
+  // args.push("--");
   args.push(repo);
   args.push(targetPath);
   var process = spawn("git", args);

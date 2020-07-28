@@ -1,10 +1,10 @@
-import { generateAllPath, generate,deepClone } from "../index";
-
+import {deepClone } from "../index";
 import { PlatFormType, LibeType } from "../../commands/col/db";
 import { FileFn } from "../../commands/file/file";
+import { generateAllTemplatePath, generateTemplate } from "../../commands/action";
 describe("测试工具函数", () => {
   test("generateAllPath函数必须返回Array<string>", () => {
-    const list = generateAllPath();
+    const list = generateAllTemplatePath();
     const viteReactPath = "packages/template/vite/react";
     const viteVuePath = "packages/template/vite/vue";
     const webpackReactPath = "packages/template/webpack/react";
@@ -49,7 +49,7 @@ describe("测试工具函数", () => {
     expect(clone).toBe(clone)
   });
   test("generate函数", () => {
-    generate();
+    generateTemplate();
     expect(true);
   });
 
