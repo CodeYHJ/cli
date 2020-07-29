@@ -85,70 +85,65 @@ export class FileFn {
     platFormtype?: PlatFormType,
     libType?: LibeType
   ) {
-    const tree = {
-      isRoot: false,
-      isDir: false,
-      templatePath: rootPath,
-      targetPath: rootPath,
-      children: [],
-    } as DependType;
-    const files = fs.readdirSync(rootPath, {
-      encoding: "utf-8",
-      withFileTypes: true,
-    });
+    const tree = {} as DependType;
+
     /**
      * 根
      */
+
+    tree.isDir = false;
+    tree.children = [];
     if (projectName === "root") {
-      tree.isRoot = true;
-      tree.isDir = true;
       tree.targetPath = "{{projectPath}}";
       tree.templatePath = rootPath;
-      tree.children = [];
       tree.platFormtype = platFormtype;
       tree.libType = libType;
-    } else {
+    }
+    else {
       const targetPath = rootPath.match(/(react|vue).*/i);
       tree.targetPath = targetPath
         ? targetPath[0].replace(/^(react|vue)?/i, "{{projectPath}}")
         : "";
       const templatePath = rootPath.match(/packages.*/i);
       tree.templatePath = templatePath ? templatePath[0] : "";
-      tree.isDir = files.length ? true : false;
     }
-
     /**
-     * 子文件
+     * 目录下存在的文件与文件夹返回一个数组
+     */
+    const files = fs.readdirSync(rootPath, {
+      encoding: "utf-8",
+      withFileTypes: true,
+    });
+    /**
+     * 子文件与文件夹
      */
     if (files.length) {
+      tree.isDir = true;
       // console.log(files, "6666666", rootPath);
-
       files.forEach((file) => {
         const fileTree = {} as DependType;
         const isDirectory = file.isDirectory();
-        fileTree.isDir = isDirectory;
-        fileTree.isRoot = false;
         const name = file.name;
-        if (name === "pages") {
-          console.log(name);
-          console.log(rootPath);
-        }
         const filePath = path.join(rootPath, name);
-        // 模板路径
-        const targetPath = filePath.match(/(react|vue).*/i);
-        fileTree.targetPath = targetPath
-          ? targetPath[0].replace(/^(react|vue)?/i, "{{projectPath}}")
-          : "";
-        // 源模板路径
-        const templatePath = filePath.match(/packages.*/i);
-        fileTree.templatePath = templatePath ? templatePath[0] : "";
         fileTree.children = [];
-
         if (isDirectory) {
           const subTree = this.generateDepend2JSON(filePath, name);
           fileTree.children.push(subTree);
+          tree.children.push(subTree);
+        } else {
+          // 模板路径
+          const targetPath = filePath.match(/(react|vue).*/i);
+          fileTree.targetPath = targetPath
+            ? targetPath[0].replace(/^(react|vue)?/i, "{{projectPath}}")
+            : "";
+          // 源模板路径
+          const templatePath = filePath.match(/packages.*/i);
+          fileTree.templatePath = templatePath ? templatePath[0] : "";
+          fileTree.isDir = isDirectory;
+          fileTree.isRoot = false;
+          tree.children.push(fileTree);
+
         }
-        tree.children.push(fileTree);
       });
     }
     return tree;
